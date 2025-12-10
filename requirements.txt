@@ -1,0 +1,18 @@
+# 核心依赖
+funasr>=1.0.0  # 中文语音识别（推荐）
+# 或者使用 openai-whisper>=20231117 作为备选
+
+# 文档生成
+python-docx>=1.0.0
+
+# 音频处理
+soundfile>=0.12.0  # 用于读取音频文件信息
+
+# 深度学习框架（根据系统选择）
+# Windows (CUDA): pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# macOS (MPS): pip install torch torchvision torchaudio
+# CPU only: pip install torch torchvision torchaudio
+
+# 其他工具
+numpy>=1.21.0
+

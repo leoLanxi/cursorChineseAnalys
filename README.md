@@ -29,6 +29,14 @@ sudo apt-get install ffmpeg
 
 ### 2. 安装Python依赖
 
+**方法1: 使用自动安装脚本（推荐）**
+```bash
+python setup.py
+```
+
+脚本会自动检查已安装的依赖，并安装缺失的包。
+
+**方法2: 手动安装**
 ```bash
 pip install -r requirements.txt
 ```
@@ -42,6 +50,11 @@ pip install funasr
 ```bash
 pip install openai-whisper
 ```
+
+**GPU加速支持:**
+- **Windows (CUDA)**: `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118`
+- **macOS (MPS)**: `pip install torch torchvision torchaudio`
+- **CPU only**: `pip install torch torchvision torchaudio`
 
 ## 使用方法
 
@@ -62,9 +75,10 @@ python main.py
 
 ### 3. 查看结果
 
-- **Word文档**: `output/<视频名>.docx`
-- **SRT字幕**: `output/<视频名>.srt`
-- **JSON结果**: `output/results.json`
+- **Word文档**: `output/<视频名>/<视频名>.docx`
+- **SRT字幕**: `output/<视频名>/<视频名>.srt`
+
+每个视频的输出文件都保存在以视频文件名命名的独立文件夹中。
 
 ## 输出格式
 
@@ -79,17 +93,14 @@ python main.py
 - 保持自然中文表达
 - 适当分行，一句不宜过长
 
-### JSON结果格式
+## 分支说明
 
-```json
-[
-  {
-    "video": "视频文件名.mp4",
-    "word_content": "按自然段整理后的中文对白（无时间戳）",
-    "srt_content": "完整SRT字幕文本"
-  }
-]
-```
+本项目有两个分支，针对不同的运行环境：
+
+- **main分支**: Windows 11 + RTX 5060Ti (CUDA加速)
+- **mac分支**: macOS M1 Max (MPS加速)
+
+请根据你的运行环境切换到对应的分支。
 
 ## 识别规则
 
@@ -108,9 +119,14 @@ vedioAnayls/
 ├── speech_recognizer.py # 语音识别模块
 ├── text_processor.py    # 文本后处理模块
 ├── file_generator.py    # 文件生成模块
+├── utils.py             # 工具函数（设备检测等）
+├── setup.py             # 依赖安装脚本
 ├── requirements.txt     # Python依赖
 ├── input_videos/        # 输入视频目录
 └── output/              # 输出目录
+    └── <视频名>/        # 每个视频的输出文件夹
+        ├── <视频名>.docx
+        └── <视频名>.srt
 ```
 
 ## 注意事项

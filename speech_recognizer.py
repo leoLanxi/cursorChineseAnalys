@@ -41,6 +41,51 @@ def recognize_speech(audio_path: str) -> List[Dict]:
             )
 
 
+def _parse_timestamp(timestamp) -> tuple:
+    """
+    安全解析时间戳，处理各种可能的数据结构
+    
+    Returns:
+        (start, end) 元组，如果无法解析则返回 (0.0, 0.0)
+    """
+    if not timestamp:
+        return (0.0, 0.0)
+    
+    try:
+        # 如果timestamp是列表
+        if isinstance(timestamp, list):
+            # 如果第一个元素也是列表（嵌套结构）
+            if len(timestamp) > 0 and isinstance(timestamp[0], list):
+                # 格式: [[start, end], ...]
+                if len(timestamp[0]) >= 2:
+                    start = float(timestamp[0][0])
+                    end = float(timestamp[0][1])
+                    return (start, end)
+            # 格式: [start, end]
+            elif len(timestamp) >= 2:
+                # 检查元素是否为列表
+                if isinstance(timestamp[0], list):
+                    start = float(timestamp[0][0]) if timestamp[0] else 0.0
+                else:
+                    start = float(timestamp[0])
+                
+                if isinstance(timestamp[1], list):
+                    end = float(timestamp[1][0]) if timestamp[1] else 0.0
+                else:
+                    end = float(timestamp[1])
+                
+                return (start, end)
+        
+        # 如果是其他类型，尝试转换
+        if isinstance(timestamp, (int, float)):
+            return (0.0, float(timestamp))
+            
+    except (ValueError, TypeError, IndexError) as e:
+        print(f"警告: 时间戳解析失败: {timestamp}, 错误: {e}")
+    
+    return (0.0, 0.0)
+
+
 def recognize_with_funasr(audio_path: str) -> List[Dict]:
     """使用FunASR Paraformer进行识别"""
     from funasr import AutoModel
@@ -92,13 +137,18 @@ def recognize_with_funasr(audio_path: str) -> List[Dict]:
                 text = item.get('text', '') or item.get('pred', '')
                 # 尝试获取时间戳
                 timestamp = item.get('timestamp', [])
-                if timestamp and len(timestamp) >= 2:
-                    start = float(timestamp[0])
-                    end = float(timestamp[1])
-                else:
-                    # 如果没有时间戳，尝试从其他字段获取
+                start, end = _parse_timestamp(timestamp)
+                
+                # 如果时间戳解析失败，尝试从其他字段获取
+                if start == 0.0 and end == 0.0:
                     start = item.get('start', 0.0)
                     end = item.get('end', 0.0)
+                    # 确保是数字类型
+                    try:
+                        start = float(start) if start else 0.0
+                        end = float(end) if end else 0.0
+                    except (ValueError, TypeError):
+                        start, end = 0.0, 0.0
                 
                 if text:
                     segments.append({
@@ -117,18 +167,12 @@ def recognize_with_funasr(audio_path: str) -> List[Dict]:
         text = result.get('text', '') or result.get('pred', '')
         timestamp = result.get('timestamp', [])
         if text:
-            if timestamp and len(timestamp) >= 2:
-                segments.append({
-                    'text': text.strip(),
-                    'start': float(timestamp[0]),
-                    'end': float(timestamp[1])
-                })
-            else:
-                segments.append({
-                    'text': text.strip(),
-                    'start': 0.0,
-                    'end': 0.0
-                })
+            start, end = _parse_timestamp(timestamp)
+            segments.append({
+                'text': text.strip(),
+                'start': start,
+                'end': end
+            })
     elif isinstance(result, str):
         if result.strip():
             segments.append({

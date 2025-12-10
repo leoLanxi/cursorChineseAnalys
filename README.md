@@ -2,6 +2,8 @@
 
 专业的中文视频语音识别助手，支持批量处理视频文件，生成Word文档和SRT字幕。
 
+**当前分支**: main (Windows 11 + RTX 5060Ti CUDA加速)
+
 ## 功能特点
 
 - ✅ 支持多种视频格式（mp4, avi, mov, mkv等）
@@ -9,26 +11,27 @@
 - ✅ 自动文本润色和段落整理
 - ✅ 生成Word文档（.docx）和SRT字幕（.srt）
 - ✅ 批量处理多个视频文件
+- ✅ 自动检测并使用CUDA加速（Windows）
 
 ## 安装要求
 
 ### 1. 安装FFmpeg（必需）
 
-**macOS:**
-```bash
-brew install ffmpeg
-```
-
-**Linux:**
-```bash
-sudo apt-get install ffmpeg
-```
-
 **Windows:**
-下载并安装 [FFmpeg](https://ffmpeg.org/download.html)
+1. 下载: [FFmpeg官网](https://ffmpeg.org/download.html)
+2. 解压到 `D:\ffmpeg` (推荐，避免占用C盘)
+3. 将 `D:\ffmpeg\bin` 添加到系统PATH环境变量
 
 ### 2. 安装Python依赖
 
+**方法1: 使用自动安装脚本（推荐）**
+```bash
+python setup.py
+```
+
+脚本会自动检查已安装的依赖，并安装缺失的包。**Windows系统会自动将下载内容保存到D盘**。
+
+**方法2: 手动安装**
 ```bash
 pip install -r requirements.txt
 ```
@@ -41,6 +44,11 @@ pip install funasr
 **或者使用Whisper（备选）:**
 ```bash
 pip install openai-whisper
+```
+
+**CUDA加速支持（Windows）:**
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ## 使用方法
@@ -62,9 +70,10 @@ python main.py
 
 ### 3. 查看结果
 
-- **Word文档**: `output/<视频名>.docx`
-- **SRT字幕**: `output/<视频名>.srt`
-- **JSON结果**: `output/results.json`
+- **Word文档**: `output/<视频名>/<视频名>.docx`
+- **SRT字幕**: `output/<视频名>/<视频名>.srt`
+
+每个视频的输出文件都保存在以视频文件名命名的独立文件夹中。
 
 ## 输出格式
 
@@ -79,17 +88,14 @@ python main.py
 - 保持自然中文表达
 - 适当分行，一句不宜过长
 
-### JSON结果格式
+## 分支说明
 
-```json
-[
-  {
-    "video": "视频文件名.mp4",
-    "word_content": "按自然段整理后的中文对白（无时间戳）",
-    "srt_content": "完整SRT字幕文本"
-  }
-]
-```
+本项目有两个分支，针对不同的运行环境：
+
+- **main分支**: Windows 11 + RTX 5060Ti (CUDA加速) ← 当前分支
+- **mac分支**: macOS M1 Max (MPS加速)
+
+请根据你的运行环境切换到对应的分支。
 
 ## 识别规则
 
@@ -108,16 +114,33 @@ vedioAnayls/
 ├── speech_recognizer.py # 语音识别模块
 ├── text_processor.py    # 文本后处理模块
 ├── file_generator.py    # 文件生成模块
+├── utils.py             # 工具函数（设备检测等）
+├── setup.py             # 依赖安装脚本
 ├── requirements.txt     # Python依赖
 ├── input_videos/        # 输入视频目录
 └── output/              # 输出目录
+    └── <视频名>/        # 每个视频的输出文件夹
+        ├── <视频名>.docx
+        └── <视频名>.srt
 ```
+
+## Windows特定说明
+
+### 下载目录设置
+- 所有pip下载的包和缓存文件会自动保存到 `D:\PythonCache`
+- 如果D盘不存在，将使用用户目录下的缓存文件夹
+- 这可以避免占用C盘空间
+
+### CUDA加速
+- 系统会自动检测NVIDIA GPU
+- 如果检测到CUDA设备，会自动使用GPU加速
+- 确保已安装支持CUDA的PyTorch版本
 
 ## 注意事项
 
 1. 首次运行FunASR会自动下载模型（约几百MB），请确保网络连接正常
 2. 处理长视频可能需要较长时间，请耐心等待
-3. 确保有足够的磁盘空间存储临时音频文件
+3. 确保有足够的磁盘空间存储临时音频文件（建议使用D盘）
 4. 如果识别效果不理想，可以尝试调整模型参数或使用不同的识别引擎
 
 ## 故障排除
@@ -126,12 +149,16 @@ vedioAnayls/
 确保已正确安装FFmpeg，并在命令行中可以运行 `ffmpeg -version`
 
 ### 语音识别库未安装
-根据你的需求选择安装：
+运行 `python setup.py` 自动安装，或手动安装：
 - `pip install funasr` （推荐，中文优化）
 - `pip install openai-whisper` （备选）
+
+### CUDA不可用
+1. 确保已安装NVIDIA驱动
+2. 安装支持CUDA的PyTorch: `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118`
+3. 验证: `python -c "import torch; print(torch.cuda.is_available())"`
 
 ### 内存不足
 如果处理大视频文件时内存不足，可以：
 - 使用较小的识别模型
 - 分段处理视频
-

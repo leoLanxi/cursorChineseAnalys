@@ -27,18 +27,22 @@ def install_package(package: str, use_cache_dir: bool = False):
     """安装Python包"""
     cmd = [sys.executable, "-m", "pip", "install", package]
     
+    env = os.environ.copy()
     if use_cache_dir:
         cache_dir = get_cache_dir()
         # 设置pip缓存目录
-        os.environ["PIP_CACHE_DIR"] = cache_dir
+        env["PIP_CACHE_DIR"] = cache_dir
         # 设置临时目录
-        os.environ["TMPDIR"] = cache_dir
-        os.environ["TEMP"] = cache_dir
-        os.environ["TMP"] = cache_dir
+        env["TMPDIR"] = cache_dir
+        env["TEMP"] = cache_dir
+        env["TMP"] = cache_dir
+        # 设置pip下载目录（Windows特定）
+        if is_windows():
+            env["PIP_DOWNLOAD_CACHE"] = cache_dir
         print(f"使用缓存目录: {cache_dir}")
     
     try:
-        subprocess.check_call(cmd)
+        subprocess.check_call(cmd, env=env)
         print(f"✓ 成功安装: {package}")
         return True
     except subprocess.CalledProcessError as e:

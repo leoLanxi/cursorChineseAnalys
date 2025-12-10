@@ -2,6 +2,8 @@
 
 专业的中文视频语音识别助手，支持批量处理视频文件，生成Word文档和SRT字幕。
 
+**当前分支**: mac (macOS M1 Max MPS加速)
+
 ## 功能特点
 
 - ✅ 支持多种视频格式（mp4, avi, mov, mkv等）
@@ -9,6 +11,7 @@
 - ✅ 自动文本润色和段落整理
 - ✅ 生成Word文档（.docx）和SRT字幕（.srt）
 - ✅ 批量处理多个视频文件
+- ✅ 自动检测并使用MPS加速（Apple Silicon）
 
 ## 安装要求
 
@@ -18,14 +21,6 @@
 ```bash
 brew install ffmpeg
 ```
-
-**Linux:**
-```bash
-sudo apt-get install ffmpeg
-```
-
-**Windows:**
-下载并安装 [FFmpeg](https://ffmpeg.org/download.html)
 
 ### 2. 安装Python依赖
 
@@ -52,7 +47,6 @@ pip install openai-whisper
 ```
 
 **GPU加速支持:**
-- **Windows (CUDA)**: `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118`
 - **macOS (MPS)**: `pip install torch torchvision torchaudio`
 - **CPU only**: `pip install torch torchvision torchaudio`
 
@@ -98,7 +92,7 @@ python main.py
 本项目有两个分支，针对不同的运行环境：
 
 - **main分支**: Windows 11 + RTX 5060Ti (CUDA加速)
-- **mac分支**: macOS M1 Max (MPS加速)
+- **mac分支**: macOS M1 Max (MPS加速) ← 当前分支
 
 请根据你的运行环境切换到对应的分支。
 
@@ -129,6 +123,13 @@ vedioAnayls/
         └── <视频名>.srt
 ```
 
+## macOS特定说明
+
+### MPS加速
+- 系统会自动检测Apple Silicon (M1/M2/M3)
+- 如果检测到MPS设备，会自动使用GPU加速
+- 确保已安装支持MPS的PyTorch版本
+
 ## 注意事项
 
 1. 首次运行FunASR会自动下载模型（约几百MB），请确保网络连接正常
@@ -142,12 +143,16 @@ vedioAnayls/
 确保已正确安装FFmpeg，并在命令行中可以运行 `ffmpeg -version`
 
 ### 语音识别库未安装
-根据你的需求选择安装：
+运行 `python setup.py` 自动安装，或手动安装：
 - `pip install funasr` （推荐，中文优化）
 - `pip install openai-whisper` （备选）
+
+### MPS不可用
+1. 确保使用的是Apple Silicon Mac (M1/M2/M3)
+2. 安装支持MPS的PyTorch: `pip install torch torchvision torchaudio`
+3. 验证: `python -c "import torch; print(torch.backends.mps.is_available())"`
 
 ### 内存不足
 如果处理大视频文件时内存不足，可以：
 - 使用较小的识别模型
 - 分段处理视频
-
